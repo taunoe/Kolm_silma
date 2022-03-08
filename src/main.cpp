@@ -11,23 +11,39 @@
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
 
+// Built in LED
 const uint8_t GREEN_LED_PIN = 13;
+// NeoPixel
 const uint8_t NEOPIXEL_PIN = 2;
 const uint8_t NEOPIXEL_NUM = 3;
-const uint8_t NEOPIXEL_NUM = 3;
+// Sensor
+const uint8_t PROXIMITY_PIN = 3;
+uint8_t proximity_val = 0;
 
 
 Adafruit_NeoPixel pixels(NEOPIXEL_NUM, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
 void setup() {
+  Serial.begin(115200);
+  Serial.println("\"Kolm Silma\" starts!");
+
   // Initialize pins
   pinMode(GREEN_LED_PIN, OUTPUT);
+  pinMode(PROXIMITY_PIN, INPUT);
 
   pixels.begin();
 }
 
 void loop() {
   pixels.clear(); // Set all pixel colors to 'off'
+
+  proximity_val = digitalRead(PROXIMITY_PIN);
+
+  if (proximity_val == HIGH) {
+    Serial.println("High");
+  } else {
+    Serial.println("Low");
+  }
 
   for(int i=0; i<NEOPIXEL_NUM; i++) { // For each pixel...
 
