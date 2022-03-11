@@ -1,10 +1,26 @@
 # Electronic sculpture - "Kolm silma"
 
-Hardware:
+## Hardware:
 
 * Selfmade Arduino Uno
 * W2812 RGB NeoPixels  x 3pc.
 * RCWL-0516 Microwave Proximity sensor
+
+## Diagram
+
+```mermaid
+  graph TD;
+      Input_voltage-->Voltage_regulator;
+      Voltage_regulator-->|5V|MCU;
+      Voltage_regulator-->|5V|Sensor;
+      Voltage_regulator-->|5V|RGB_LED_1;
+      FTDI_pins-->MCU;
+      Sensor-->|Digital|MCU;
+      MCU-->FTDI_pins;
+      MCU-->|Digital|RGB_LED_1;
+      RGB_LED_1-->|Digital|RGB_LED_2;
+      RGB_LED_2-->|Digital|RGB_LED_3;
+```
 
 ## RCWL-0516
 
@@ -32,6 +48,11 @@ CDS | Optional light sensor
 * Astronomy - red or blue shifting of light from distant object.
 * Satellite communications -used dynamic doppler compensation.
 * Medical -echocardiogram measures blood flow.
+
+
+## Links
+
+* https://github.blog/2022-02-14-include-diagrams-markdown-files-mermaid/
 
  ___
 
