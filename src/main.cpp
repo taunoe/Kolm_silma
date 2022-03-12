@@ -6,7 +6,7 @@
  *          RCWL-0516 Microwave Proximity sensor
  * Author:  Tauno Erik https://taunoerik.art/
  * Started: 08.03.2022
- * Edited:  11.03.2022
+ * Edited:  12.03.2022
  **/
 
 #include <Arduino.h>
@@ -19,23 +19,23 @@ const uint8_t PX_PIN = 2;
 const uint8_t PX_NUM = 3;
 // Sensor
 const uint8_t PROXIMITY_PIN = 3;
-uint8_t proximity_val = 0;
+bool is_movement = false;
 
 
 Adafruit_NeoPixel Pixels(PX_NUM, PX_PIN, NEO_GRB + NEO_KHZ800);
 
-/* Global variables 
+/* Global variables:
    Timing
 */
-unsigned long pixelPrevious = 0;          // Previous Pixel Millis
-unsigned long patternPrevious = 0;        // Previous Pattern Millis
-int           patternCurrent = 0;         // Current Pattern Number
-int           patternInterval = 5000;     // Pattern Interval (ms)
-int           px_interval = 50;         // Pixel Interval (ms)
-int           px_queue = 0;             // Pattern Pixel Queue
-int           px_cycle = 0;             // Pattern Pixel Cycle
-uint16_t      px_current = 0;           // Pattern Current Pixel Number
-uint16_t      px_number = PX_NUM;  // Total Number of Pixels
+unsigned long time_px_prev = 0;     // Millis
+unsigned long time_pat_prev = 0;    // Millis
+int           pattern_nr = 0;       // Current Pattern Number
+int           pat_interval = 5000;  // Pattern Interval (ms)
+int           px_interval = 50;     // Pixel Interval (ms)
+int           px_queue = 0;         // Pattern Pixel Queue
+int           px_cycle = 0;         // Pattern Pixel Cycle
+uint16_t      px_current = 0;       // Pattern Current Pixel Number
+uint16_t      px_number = PX_NUM;   // Total Number of Pixels
 
 
 /*******************************************/
@@ -45,34 +45,41 @@ uint16_t      px_number = PX_NUM;  // Total Number of Pixels
 /* Input a value 0 to 255 to get a color value.
    The colours are a transition r - g - b - back to r.
 */
-uint32_t wheel(byte WheelPos) {
-  WheelPos = 255 - WheelPos;
-  if(WheelPos < 85) {
-    return Pixels.Color(255 - WheelPos * 3, 0, WheelPos * 3);
+uint32_t wheel(byte wheel_pos) {
+  wheel_pos = 255 - wheel_pos;
+
+  if(wheel_pos < 85) {
+    return Pixels.Color(255 - wheel_pos * 3, 0, wheel_pos * 3);
   }
-  if(WheelPos < 170) {
-    WheelPos -= 85;
-    return Pixels.Color(0, WheelPos * 3, 255 - WheelPos * 3);
+
+  if(wheel_pos < 170) {
+    wheel_pos -= 85;
+    return Pixels.Color(0, wheel_pos * 3, 255 - wheel_pos * 3);
   }
-  WheelPos -= 170;
-  return Pixels.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+
+  wheel_pos -= 170;
+  return Pixels.Color(wheel_pos * 3, 255 - wheel_pos * 3, 0);
 }
 
 
 /* 
-Fill strip pixels one after another with a color. Strip is NOT cleared
-first; anything there will be covered pixel by pixel. Pass in color
-(as a single 'packed' 32-bit value, which you can get by calling
-strip.Color(red, green, blue) as shown in the loop() function above),
-and a delay time (in milliseconds) between pixels.
+  Fill strip pixels one after another with a color. Strip is NOT cleared
+  first; anything there will be covered pixel by pixel. Pass in color
+  (as a single 'packed' 32-bit value, which you can get by calling
+  strip.Color(red, green, blue) as shown in the loop() function above),
+  and a delay time (in milliseconds) between pixels.
+
+  color_wipe(Pixels.Color(0, 0, 255), 50); // Blue
 */
 void color_wipe(uint32_t color, int wait) {
   if(px_interval != wait) {
     px_interval = wait;
   }
+
   Pixels.setPixelColor(px_current, color);
   Pixels.show();
   px_current++;
+
   if(px_current >= PX_NUM) {
     px_current = 0;
   }
@@ -83,6 +90,8 @@ void color_wipe(uint32_t color, int wait) {
 Theater-marquee-style chasing lights. Pass in a color (32-bit value,
 a la strip.Color(r,g,b) as mentioned above), and a delay time (in ms)
 between frames.
+
+theater_chase(Pixels.Color(127, 0, 0), 50); // Red
 */
 void theater_chase(uint32_t color, int wait) {
   if(px_interval != wait) {
@@ -108,7 +117,8 @@ void theater_chase(uint32_t color, int wait) {
 
 
 /*
-Rainbow cycle along whole strip. Pass delay time (in ms) between frames.
+  Rainbow cycle along whole strip. Pass delay time (in ms) between frames.
+  rainbow(10);
 */
 void rainbow(uint8_t wait) {
   if(px_interval != wait) {
@@ -126,7 +136,9 @@ void rainbow(uint8_t wait) {
 
 
 /* 
-Theatre-style crawling lights with rainbow effect
+  Theatre-style crawling lights with rainbow effect.
+
+  theater_chase_rainbow(50);
 */
 void theater_chase_rainbow(uint8_t wait) {
   if(px_interval != wait)
@@ -161,9 +173,6 @@ void boot_blink() {
   }
   // Front pixels
   Pixels.clear();
-
-  //
-  boot_blink();
 }
 
 /*******************************************/
@@ -171,32 +180,60 @@ void boot_blink() {
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("\"Kolm Silma\" starts!");
+  // Boot message
+  Serial.println("\"Kolm Silma\"");
+  Serial.print("Compiled: ");
+  Serial.print(__TIME__);
+  Serial.print(" ");
+  Serial.println(__DATE__);
+  Serial.println("Made by Tauno Erik.");
 
   // Initialize pins
   pinMode(GREEN_LED_PIN, OUTPUT);
   pinMode(PROXIMITY_PIN, INPUT);
 
+  // Initialize neopixsels
   Pixels.begin();
   Pixels.show();            // off
   Pixels.setBrightness(50); // 0-255
+
+  boot_blink();
 }
 
 void loop() {
   //Pixels.clear(); // Set all pixel colors to 'off'
 
-  unsigned long currentMillis = millis();                     //  Update current time
-  if((currentMillis - patternPrevious) >= patternInterval) {  //  Check for expired time
-    patternPrevious = currentMillis;
-    patternCurrent++;                                         //  Advance to next pattern
-    if(patternCurrent >= 7)
-      patternCurrent = 0;
+  is_movement = digitalRead(PROXIMITY_PIN);
+
+  // Change pattern by movement
+  if (is_movement) {
+    //Serial.println("High");
+    // Mingi aeg?
+    pattern_nr++;
+    if(pattern_nr >= 7) {
+      pattern_nr = 0;
+    }
+  } else {
+    //Serial.println("Low");
   }
 
+  unsigned long time_now = millis();
 
-  if(currentMillis - pixelPrevious >= px_interval) {  //  Check for expired time
-    pixelPrevious = currentMillis;                    //  Run current frame
-    switch (patternCurrent) {
+  // Change pattern by time
+  /*
+  if((time_now - time_pat_prev) >= pat_interval) {
+    time_pat_prev = time_now;
+    pattern_nr++;
+    if(pattern_nr >= 7) {
+      pattern_nr = 0;
+    }
+  }
+  */
+
+  if(time_now - time_px_prev >= px_interval) {
+    time_px_prev = time_now;
+
+    switch (pattern_nr) {
       case 7:
         Serial.println("7");
         theater_chase_rainbow(50);
@@ -204,7 +241,7 @@ void loop() {
       case 6:
         Serial.println("6");
         rainbow(10);
-        break;     
+        break;
       case 5:
         Serial.println("5");
         theater_chase(Pixels.Color(0, 0, 127), 50);
@@ -232,35 +269,4 @@ void loop() {
     }
   }
 
-  proximity_val = digitalRead(PROXIMITY_PIN);
-/*
-  if (proximity_val == HIGH) {
-    Serial.println("High");
-  } else {
-    Serial.println("Low");
-  }
-*/
-
-/********************************
-  for(int i=0; i<NEOPIXEL_NUM; i++) {
-    pixels.setPixelColor(i, pixels.Color(0, 150, 0));
-    pixels.show();
-    delay(500);
-  }
-*/
-/*
-  color_wipe(pixels.Color(255,   0,   0), 100); // Red
-  color_wipe(pixels.Color(  0, 255,   0), 100); // Green
-  color_wipe(pixels.Color(  0,   0, 255), 100); // Blue
-*/
-
-/*
-  theater_chase(pixels.Color(127, 127, 127), 50); // White, half brightness
-  theater_chase(pixels.Color(127,   0,   0), 50); // Red, half brightness
-  theater_chase(pixels.Color(  0,   0, 127), 50); // Blue, half brightness
-*/
-
-  //rainbow(10);
-
-  //theaterChaseRainbow(50);
 }
