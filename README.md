@@ -1,10 +1,12 @@
-# Electronic sculpture - "Kolm silma"
+# Electronic sculpture "Kolm silma"
 
-## Hardware:
+It changes LEDs' colours when it detects movements.
 
-* Selfmade Arduino Uno
-* W2812 RGB NeoPixels  x 3pc.
-* RCWL-0516 Microwave Proximity sensor
+## Hardware
+
+* MCU: Selfmade Arduino Uno
+* RGB LED: W2812 NeoPixels  x 3pc.
+* Sensor: RCWL-0516 Microwave Proximity
 
 ## Diagram
 
@@ -48,7 +50,6 @@ CDS | Optional light sensor
 * Astronomy - red or blue shifting of light from distant object.
 * Satellite communications -used dynamic doppler compensation.
 * Medical -echocardiogram measures blood flow.
-
 
 ## Links
 

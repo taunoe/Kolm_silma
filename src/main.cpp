@@ -31,15 +31,33 @@ unsigned long time_px_prev = 0;     // Millis
 unsigned long time_pat_prev = 0;    // Millis
 int           pattern_nr = 0;       // Current Pattern Number
 int           pat_interval = 5000;  // Pattern Interval (ms)
-int           px_interval = 50;     // Pixel Interval (ms)
+uint16_t      px_interval = 50;     // Pixel Interval (ms)
 int           px_queue = 0;         // Pattern Pixel Queue
 int           px_cycle = 0;         // Pattern Pixel Cycle
 uint16_t      px_current = 0;       // Pattern Current Pixel Number
 uint16_t      px_number = PX_NUM;   // Total Number of Pixels
-
+uint8_t r = 0;
+uint8_t g = 0;
+uint8_t b = 0;
+bool change_color = false;
 
 /*******************************************/
 // Functions
+
+/*
+*/
+uint8_t new_value(uint8_t value) {
+  long change_dir = random(2); // ++ or --
+  long change_step = random(1, 10); // ++ or --
+
+  if (change_dir >= 1) {
+    value = value + change_step;
+  } else {
+    value = value - change_step;
+  }
+
+  return value;
+}
 
 
 /* Input a value 0 to 255 to get a color value.
@@ -122,17 +140,21 @@ void theater_chase(uint32_t color, int wait) {
 */
 void rainbow(uint8_t wait) {
   if(px_interval != wait) {
-    px_interval = wait;
+    px_interval = wait;  // Global var
   }
+
   for(uint16_t i=0; i < px_number; i++) {
     Pixels.setPixelColor(i, wheel((i + px_cycle) & 255));
   }
+
   Pixels.show();
   px_cycle++;
+
   if(px_cycle >= 256) {
     px_cycle = 0;
   }
 }
+
 
 
 /* 
@@ -140,7 +162,7 @@ void rainbow(uint8_t wait) {
 
   theater_chase_rainbow(50);
 */
-void theater_chase_rainbow(uint8_t wait) {
+void theater_chase_rainbow(uint16_t wait) {
   if(px_interval != wait)
     px_interval = wait;
   for(int i=0; i < px_number; i+3) {
@@ -197,76 +219,72 @@ void setup() {
   Pixels.show();            // off
   Pixels.setBrightness(50); // 0-255
 
+  // Random number
+  randomSeed(analogRead(0));
+
   boot_blink();
 }
 
 void loop() {
-  //Pixels.clear(); // Set all pixel colors to 'off'
+  unsigned long time_now = millis();
 
   is_movement = digitalRead(PROXIMITY_PIN);
 
-  // Change pattern by movement
   if (is_movement) {
-    //Serial.println("High");
-    // Mingi aeg?
-    pattern_nr++;
-    if(pattern_nr >= 7) {
-      pattern_nr = 0;
-    }
+    //Serial.print("H");
+    change_color = true;
   } else {
-    //Serial.println("Low");
+    //Serial.print("L");
+    change_color = false;
   }
 
-  unsigned long time_now = millis();
-
-  // Change pattern by time
-  /*
-  if((time_now - time_pat_prev) >= pat_interval) {
-    time_pat_prev = time_now;
-    pattern_nr++;
-    if(pattern_nr >= 7) {
-      pattern_nr = 0;
-    }
-  }
-  */
 
   if(time_now - time_px_prev >= px_interval) {
     time_px_prev = time_now;
 
-    switch (pattern_nr) {
-      case 7:
-        Serial.println("7");
-        theater_chase_rainbow(50);
-        break;
-      case 6:
-        Serial.println("6");
-        rainbow(10);
-        break;
-      case 5:
-        Serial.println("5");
-        theater_chase(Pixels.Color(0, 0, 127), 50);
-        break;
-      case 4:
-        Serial.println("4");
-        theater_chase(Pixels.Color(127, 0, 0), 50); // Red
-        break;
-      case 3:
-        Serial.println("3");
-        theater_chase(Pixels.Color(127, 127, 127), 50); // White
-        break;
-      case 2:
-        Serial.println("2");
-        color_wipe(Pixels.Color(0, 0, 255), 50); // Blue
+    long random_RGB = random(3); // r, g or b
+
+    if (change_color) {
+
+      // Select pixsel
+      long random_px = random(PX_NUM);
+      // Get colors
+      uint32_t px_colors = Pixels.getPixelColor(random_px);
+      // Split to r,g,b
+      r = (uint8_t)(px_colors>>16 & 0xFF);
+      g = (uint8_t)(px_colors>>8 & 0xFF);
+      b = (uint8_t)(px_colors>>0 & 0xFF);
+
+      switch (random_RGB) {
+      case 0:
+        Serial.print(" r");
+        r = new_value(r);
+        Serial.print(r);
         break;
       case 1:
-        Serial.println("1");
-        color_wipe(Pixels.Color(0, 255, 0), 50); // Green
-        break;        
-      default:
-        Serial.println("default");
-        color_wipe(Pixels.Color(255, 0, 0), 50); // Red
+        Serial.print(" g");
+        g = new_value(g);
+        Serial.print(g);
         break;
+      case 2:
+        Serial.print(" b");
+        b = new_value(b);
+        Serial.print(b);
+        break;
+      default:
+        break;
+      }
+
+    Pixels.setPixelColor(random_px, Pixels.Color(r, g, b));
+    /*for(uint16_t i=0; i < px_number; i++) {
+      Pixels.setPixelColor(i, Pixels.Color(r, g, b));
+    }*/
+
+    Pixels.show();
+    change_color = false;
     }
+
+
   }
 
 }
