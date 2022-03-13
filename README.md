@@ -53,8 +53,9 @@ CDS | Optional light sensor
 
 ## Links
 
-* https://github.blog/2022-02-14-include-diagrams-markdown-files-mermaid/
+* [Include diagrams in your Markdown files with Mermaid](https://github.blog/2022-02-14-include-diagrams-markdown-files-mermaid/)
+* [Helper function for unpacking rgb](https://github.com/adafruit/Adafruit_NeoPixel/issues/88)
 
  ___
 
-Copyright 2022 Tauno Erik https://taunoerik.art
+Copyright 2022, Tauno Erik, [taunoerik.art](https://taunoerik.art).
