@@ -58,9 +58,14 @@ CDS | Optional light sensor
 ```mermaid
   flowchart TD;
     A[Sensor] --> B{Is movment?};
-    B -- Yes --> C[Värvid];
-    B -- No --> D{Time >= 60 sec};
-    D -- Yes --> E[LEDs off]
+    B -- Yes --> H[Time];
+    H --> C{Time >= interval};
+    B -- No --> G[Time];
+    G --> D{Time >= 60 sec};
+    D -- Yes --> E[LEDs off];
+    E --> B;
+    C -- Yes --> F[Change rand pixel, rand color];
+    F --> B;
 
 ```
 

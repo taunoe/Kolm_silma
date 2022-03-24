@@ -130,11 +130,13 @@ void loop() {
       // Select random color chanel
       long random_RGB = random(3); // r, g or b
 
-      // Select random pixsel
+      // Select random pixel
       long random_px = random(PX_NUM);
+
       Serial.print(" Pixel:");
       Serial.print(random_px+1);
-      // Get this pixel colors
+
+      // Get this pixel old colors
       uint32_t px_colors = Pixels.getPixelColor(random_px);
       // Split to r,g,b
       r = (uint8_t)(px_colors>>16 & 0xFF);
@@ -168,7 +170,6 @@ void loop() {
       change_color = false;
     }
   }
-
 
 
 }
