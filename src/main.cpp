@@ -20,7 +20,8 @@ const uint8_t PX_NUM = 3;
 // Sensor
 const uint8_t PROXIMITY_PIN = 3;
 
-
+const uint16_t OFF_TIME = 60000;
+uint32_t no_movment_time = 0;
 
 /* Global variables:
 */
@@ -88,7 +89,7 @@ void setup() {
 
   // Initialize neopixsels
   Pixels.begin();
-  Pixels.show();            // off
+  Pixels.show();
   Pixels.setBrightness(50); // 0-255
 
   // Random number
@@ -98,20 +99,31 @@ void setup() {
 }
 
 void loop() {
-  unsigned long time_now = millis();
+  uint32_t time_now = millis();
 
   is_movement = digitalRead(PROXIMITY_PIN);
 
   if (is_movement) {
     //Serial.print("H");
     change_color = true;
+    no_movment_time = time_now;
   } else {
     //Serial.print("L");
     change_color = false;
   }
 
 
-  if(time_now - time_px_prev >= px_interval) {
+  if (time_now - no_movment_time >= OFF_TIME) {
+    // all LEDs off
+    for (uint8_t i = 0; i < PX_NUM; i++) {
+      Pixels.setPixelColor(i, Pixels.Color(0, 0, 0));
+    }
+    Pixels.show();
+  }
+
+
+  // Colour change routine
+  if (time_now - time_px_prev >= px_interval) {
     time_px_prev = time_now;
 
     if (change_color) {
@@ -156,5 +168,7 @@ void loop() {
       change_color = false;
     }
   }
+
+
 
 }

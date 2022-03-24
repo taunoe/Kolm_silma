@@ -8,10 +8,10 @@ It changes LEDs' colours when it detects movements.
 * RGB LED: W2812 NeoPixels  x 3pc.
 * Sensor: RCWL-0516 Microwave Proximity
 
-## Diagram
+### Diagram
 
 ```mermaid
-  graph TD;
+  graph LR;
       Input_voltage-->Voltage_regulator;
       Voltage_regulator-->|5V|MCU;
       Voltage_regulator-->|5V|Sensor;
@@ -50,6 +50,19 @@ CDS | Optional light sensor
 * Astronomy - red or blue shifting of light from distant object.
 * Satellite communications -used dynamic doppler compensation.
 * Medical -echocardiogram measures blood flow.
+
+## Software
+
+### Block diagram
+
+```mermaid
+  flowchart TD;
+    A[Sensor] --> B{Is movment?};
+    B -- Yes --> C[Värvid];
+    B -- No --> D{Time >= 60 sec};
+    D -- Yes --> E[LEDs off]
+
+```
 
 ## Links
 
