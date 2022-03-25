@@ -1,6 +1,6 @@
 # Electronic sculpture "Kolm silma"
 
-It changes LEDs' colours when it detects movements.
+"Kolm silma" is an electronic sculpture with three eyes (RGB LEDs). It changes LEDs' colours when it detects movements.
 
 ![Kolm silma](img/Kolm_silma.jpg)
 
