@@ -2,6 +2,8 @@
 
 It changes LEDs' colours when it detects movements.
 
+![Kolm silma](img/Kolm_silma.jpg)
+
 ## Hardware
 
 * MCU: Selfmade Arduino Uno
